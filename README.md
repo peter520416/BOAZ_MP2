@@ -53,31 +53,29 @@ BOAZ_MP2/
 
 **권장 환경**: Google Colab Pro (A100 GPU)
 
-### 1. Colab에서 실행
-
-# 1. 저장소 클론
+### 1. 저장소 클론
 ```bash
 !git clone <repo-url>
 cd BOAZ_MP2
 ```
 
-# 2. 환경변수 설정
+### 2. 환경변수 설정
 ```bash
 # .env 파일
 HF_TOKEN=your_huggingface_token_here
 ```
 
-# 3. 의존성 설치 및 앱 실행
+### 3. 의존성 설치 및 앱 실행
 ```bash
 !pip install -r requirements.txt
 ```
 
-# Streamlit 앱 실행
+### 4. Streamlit 앱 실행
 ```bash
 !python code/streamlit/run_streamlit.py
 ```
 
-### 웹 인터페이스 사용법
+## 웹 인터페이스 사용법
 
 1. **질문 입력**: AI 관련 질문을 입력
 2. **답변 생성**: "질문하기" 버튼 클릭
