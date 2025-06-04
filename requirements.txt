@@ -1,0 +1,21 @@
+# 핵심 ML/DL 라이브러리
+sentence-transformers
+
+# NLP 및 검색
+rank-bm25
+
+# 설정 파일 처리
+PyYAML
+
+# 환경 변수 관리
+python-dotenv
+
+# Hugging Face Hub
+huggingface-hub
+
+# 진행률 표시
+tqdm
+
+# 기타 유틸리티
+accelerate
+bitsandbytes
