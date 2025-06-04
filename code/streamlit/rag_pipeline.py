@@ -72,7 +72,7 @@ class RAGPipeline:
         # 정책 모델 (QR & Selector용) - 사전 훈련된 모델 사용
         print(f"🔄 Policy 모델 로드: {Config.POLICY_MODEL_NAME}")
         self.tokenizer = AutoTokenizer.from_pretrained(
-            Config.POLICY_MODEL_NAME,
+            'meta-llama/Llama-3.2-1B-Instruct',
             use_fast=False
         )
         self.tokenizer.padding_side = "left"
