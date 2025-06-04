@@ -33,7 +33,7 @@ BOAZ_MP2/
 │   ├── get_unique_df.py           # 데이터 전처리
 │   └── README.md                  # 코드 사용법 가이드
 ├── data/                          # 데이터 파일들 (gitignore로 제외)
-│   ├── gpt4o_unique_df.csv       # 고유 질문-답변 쌍
+│   ├── gpt4o_unique_df.csv       # gpt4o_qa_top10.jsonl 파일의 paper_id가 unique한 데이터
 │   ├── final_qa.jsonl            # 원본 QA 데이터 (용량이 커 제외)
 │   ├── gpt4o_qa_top10.jsonl      # 원본 QA 데이터를 GPT-4o-mini를 이용하여 질문을 다시 생성한 데이터 (용량이 커 제외)
 │   └── MetaDB_with_date_id.jsonl # 논문 데이터베이스
