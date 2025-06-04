@@ -27,6 +27,13 @@ Query → QR (Query Rewriting) → BM25 Retrieval → Selector → Generator →
 ```
 BOAZ_MP2/
 ├── code/                           # 소스 코드
+│   ├── streamlit/                  # Streamlit 웹 애플리케이션
+│   │   ├── streamlit_app.py        # 메인 웹 애플리케이션
+│   │   ├── rag_pipeline.py         # RAG 추론 파이프라인
+│   │   ├── streamlit_config.py     # Streamlit 전용 설정
+│   │   ├── streamlit_config.yaml   # 기본 설정 파일
+│   │   ├── streamlit_config_fast.yaml # 빠른 로딩용 설정
+│   │   └── run_streamlit.py        # Streamlit 실행 헬퍼 스크립트
 │   ├── run_mappo.py               # 메인 MAPPO 학습 스크립트
 │   ├── config.py                  # 설정 파일 (PY)
 │   ├── config.yaml                # 설정 파일 (YAML)
@@ -38,14 +45,73 @@ BOAZ_MP2/
 │   ├── gpt4o_qa_top10.jsonl      # 원본 QA 데이터를 GPT-4o-mini를 이용하여 질문을 다시 생성한 데이터 (용량이 커 제외)
 │   └── MetaDB_with_date_id.jsonl # 논문 데이터베이스
 ├── requirements.txt               # Python 패키지
+├── .env                          # 환경 변수 (HF_TOKEN 설정)
 ├── .gitignore                    # Git 제외 파일 목록
 └── README.md                     # 현재 파일
 ```
 
-## 코드 사용법
-!!!본 코드는 colab pro a100 환경에서 실행하는 것을 권고드립니다!!!
+## 🚀 빠른 시작 (Streamlit 웹 앱)
 
-### 1. 환경 설정
+**권장 환경**: Google Colab Pro (A100 GPU) 또는 로컬 GPU 환경
+
+### 1. Colab에서 실행 (추천)
+
+```python
+# 1. 저장소 클론
+!git clone <repo-url>
+%cd BOAZ_MP2
+
+# 2. 환경변수 설정
+import os
+os.environ["HF_TOKEN"] = "your_huggingface_token_here"
+
+# 3. 의존성 설치 및 앱 실행
+!python code/streamlit/run_streamlit.py
+```
+
+### 2. 로컬에서 실행
+
+```bash
+# 저장소 클론
+git clone <repo-url>
+cd BOAZ_MP2
+
+# 가상환경 생성 및 활성화
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 패키지 설치
+pip install -r requirements.txt
+
+# 환경변수 설정 (.env 파일 생성)
+echo "HF_TOKEN=your_huggingface_token_here" > .env
+
+# Streamlit 앱 실행
+python code/streamlit/run_streamlit.py
+```
+
+### 3. 웹 인터페이스 사용법
+
+1. **질문 입력**: 강화학습/딥러닝 관련 질문을 입력
+2. **답변 생성**: "질문하기" 버튼 클릭
+3. **결과 확인**: 
+   - **Rewritten Question**: QR 모델이 재작성한 질문
+   - **Selected Document IDs**: 선택된 논문 ID들
+   - **Final Answer**: 최종 답변
+   - **Used Documents**: 답변 생성에 사용된 문서들
+
+### 4. 예시 질문들
+
+```
+- "What is PPO used for in reinforcement learning?"
+- "How does attention mechanism work in transformers?"
+- "What are the advantages of MAPPO over other RL algorithms?"
+- "Explain the difference between actor-critic and Q-learning"
+```
+
+## 학습 및 개발
+
+### 환경 설정
 
 ```bash
 # 저장소 클론
@@ -60,7 +126,7 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. 환경 변수 설정
+### 환경 변수 설정
 
 BOAZ_MP2 경로에 `.env` 파일을 생성하고 Hugging Face 토큰을 설정:
 
@@ -68,8 +134,7 @@ BOAZ_MP2 경로에 `.env` 파일을 생성하고 Hugging Face 토큰을 설정:
 HF_TOKEN=your_huggingface_token_here
 ```
 
-
-### 3. 학습 실행
+### MAPPO 학습 실행
 
 ```bash
 python code/run_mappo.py
@@ -77,7 +142,26 @@ python code/run_mappo.py
 
 ## ⚙️ 설정
 
-모든 하이퍼파라미터와 프롬프트 등 설정은 `code/config.yaml` 파일에서 관리됩니다:
+### Streamlit 설정
+
+Streamlit 앱의 설정은 `code/streamlit/streamlit_config.yaml`에서 관리됩니다:
+
+```yaml
+# 모델 설정 (추론용)
+models:
+  policy_model_name: "peter520416/llama1b-MMOA_RAG_Final_cp180"  # 사전 훈련된 모델
+  generator_model_name: "meta-llama/Llama-3.1-8B-Instruct"
+  sbert_model_name: "all-MiniLM-L6-v2"
+
+# RAG 설정
+rag:
+  k_retrieve: 10      # BM25에서 검색할 문서 수
+  k_select: 3         # 최종 선택할 문서 수
+```
+
+### 학습 설정
+
+MAPPO 학습 설정은 `code/config.yaml`에서 관리됩니다:
 
 ```yaml
 # 모델 설정
@@ -94,6 +178,22 @@ hyperparameters:
 
 자세한 설정 방법은 `code/README.md`를 참조하세요.
 
+## 기술 스택
+
+### Streamlit 웹 앱
+- **Frontend**: Streamlit
+- **Backend**: PyTorch, Transformers
+- **Models**: 
+  - Policy: `peter520416/llama1b-MMOA_RAG_Final_cp180` (사전 훈련됨)
+  - Generator: `meta-llama/Llama-3.1-8B-Instruct`
+  - Retrieval: BM25 + Sentence-BERT
+
+### 학습 환경
+- **Framework**: PyTorch
+- **Reinforcement Learning**: Multi-Agent PPO
+- **Quantization**: 8-bit via BitsAndBytes
+- **Model Hosting**: Hugging Face Hub
+
 ## 주요 기능
 
 ### Multi-Agent 학습
@@ -101,17 +201,32 @@ hyperparameters:
 - **Critic Network**: 각 에이전트의 행동 평가
 - **Shared Parameters**: 효율적인 학습을 위한 파라미터 공유
 
-### RAG
+### RAG 파이프라인
 - **BM25 Retrieval**: 빠르고 효과적인 문서 검색
+- **Document Selection**: 강화학습으로 최적화된 문서 선택
+- **Answer Generation**: 선택된 문서 기반 답변 생성
+
+### 웹 인터페이스
+- **실시간 추론**: 사전 훈련된 모델로 즉시 답변 생성
+- **단계별 결과**: QR, 문서 선택, 최종 답변 과정 시각화
+- **사용자 친화적**: 직관적인 웹 인터페이스
 
 ### 실험 및 모니터링
 - **체크포인트 자동 저장**: 학습 중단 시 복구 가능
 - **상세 로깅**: 각 단계별 성능 메트릭 추적
 - **Hugging Face 통합**: 모델 자동 업로드 및 공유
 
-## 참고 자료
+## 주의사항
+
+- **첫 실행**: 모델 다운로드로 인해 10-15분 소요 가능
+- **GPU 메모리**: 최소 12GB GPU 메모리 권장
+- **인터넷 연결**: 모델 다운로드를 위한 안정적인 인터넷 필요
+- **Colab 제한**: 무료 Colab에서는 메모리 부족 가능성
+
+## 📚 참고 자료
 
 - [MAPPO 논문](https://arxiv.org/abs/2501.15228)
+- [사전 훈련된 모델](https://huggingface.co/peter520416/llama1b-MMOA_RAG_Final_cp180)
 
 ## 참여자
 
