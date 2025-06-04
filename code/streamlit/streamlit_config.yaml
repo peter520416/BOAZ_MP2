@@ -1,0 +1,102 @@
+# MAPPO RAG 스트림릿 전용 설정 파일
+# 추론 전용 - 사전 훈련된 모델 사용
+
+# ============================================================================
+# 모델 설정 (추론용)
+# ============================================================================
+models:
+  # 사전 훈련된 Policy 모델 사용
+  policy_model_name: "peter520416/llama1b-MMOA_RAG_Final_cp180"
+  
+  # Generator 모델
+  generator_model_name: "meta-llama/Llama-3.1-8B-Instruct"
+  
+  # SentenceTransformer 모델
+  sbert_model_name: "all-MiniLM-L6-v2"
+  
+  # 디바이스 설정 (auto는 CUDA 사용 가능하면 cuda, 아니면 cpu)
+  device: "auto"
+
+# ============================================================================
+# 파일 경로 설정
+# ============================================================================
+paths:
+  # 데이터 파일 경로 (streamlit 폴더 기준)
+  MetaDB_path: "../data/MetaDB_with_date_id.jsonl"
+  gpt4o_data_path: "../data/gpt4o_unique_df.csv"
+  
+  # 로그 저장 경로 (추론용)
+  log_output_path: "../streamlit_inference_logs.csv"
+
+# ============================================================================
+# RAG 모델 설정
+# ============================================================================
+rag:
+  # 검색 관련 설정
+  k_retrieve: 10      # BM25에서 검색할 상위 청크 수
+  k_select: 3         # Selector에서 선택할 최종 논문 수
+  
+  # 생성 관련 설정
+  generation:
+    max_new_tokens_qr: 64        # QR 단계 최대 토큰 수
+    max_new_tokens_gen: 128      # Generator 단계 최대 토큰 수
+    max_input_length: 256        # QR 입력 최대 길이
+    max_sel_input_length: 512    # Selector 입력 최대 길이
+    max_gen_input_length: 2048   # Generator 입력 최대 길이
+    
+    gen_batch_size: 1           # 스트림릿용 단일 배치
+    temperature: 0.1            # 생성 온도
+
+# ============================================================================
+# 시스템 설정
+# ============================================================================
+system:
+  # CUDA 디버깅 설정 (추론시에는 비활성화)
+  cuda_launch_blocking: "0"
+  
+  # 메모리 최적화
+  load_in_8bit: true
+  low_cpu_mem_usage: true
+
+# ============================================================================
+# 프롬프트 템플릿
+# ============================================================================
+prompts:
+  # QR 프롬프트 템플릿
+  qr:
+    system_prompt: "system: You are an expert question rewriter."
+    instruction: |
+      instruction: Please rewrite the given question into a "single", "clear", "search-friendly" sub-question.
+       it Will be used to retrieve more relevant documents from a knowledge base. Do not change the meaning.
+  
+  # Selector 프롬프트 템플릿
+  selector:
+    system_prompt: "You are a document selector."
+    instruction: |
+      Your task is to select the most relevant document IDs that can answer the question.
+      Given a question and a list of candidate papers (each with an ArXiv ID and title), choose exactly 3 relevant IDs.
+      Only return the 3 ArXiv IDs, comma-separated. Do not include any explanation, titles, or extra text.
+  
+  # Generator 시스템 프롬프트
+  generator:
+    default_system: |
+      You are a helpful and concise AI assistant.
+      instruction: Use the provided documents to answer the question. If the answer is not explicitly in the documents, try to infer the best possible answer based on them. Do not say 'I'm not sure' unless absolutely nothing in the documents is relevant
+      Even if the information is only partially present, try to give a specific answer based on what is available.
+
+# ============================================================================
+# 실패 감지 문구
+# ============================================================================
+failure_phrases:
+  - "i don't know"
+  - "i'm not sure"
+  - "i cannot answer"
+  - "i can't answer"
+  - "i'm not able to"
+  - "i do not have enough information"
+  - "the documents do not contain"
+  - "there is no relevant information"
+  - "nothing in the documents"
+  - "the provided documents do not"
+  - "i'm unable to"
+  - "i do not have access" 
