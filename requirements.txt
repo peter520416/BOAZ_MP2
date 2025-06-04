@@ -19,3 +19,14 @@ tqdm
 # 기타 유틸리티
 accelerate
 bitsandbytes
+
+# 웹 인터페이스
+streamlit>=1.28.0
+
+# 데이터 처리
+pandas>=1.5.0
+numpy>=1.21.0
+
+# PyTorch 관련 (스트림릿 호환성)
+torch>=2.0.0
+transformers>=4.30.0
