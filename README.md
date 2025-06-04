@@ -91,7 +91,7 @@ HF_TOKEN=your_huggingface_token_here
 ### MAPPO 학습 실행
 
 ```bash
-python code/run_mappo.py
+!python code/run_mappo.py
 ```
 
 ### 학습 설정
