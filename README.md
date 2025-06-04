@@ -32,7 +32,6 @@ BOAZ_MP2/
 │   │   ├── rag_pipeline.py         # RAG 추론 파이프라인
 │   │   ├── streamlit_config.py     # Streamlit 전용 설정
 │   │   ├── streamlit_config.yaml   # 기본 설정 파일
-│   │   ├── streamlit_config_fast.yaml # 빠른 로딩용 설정
 │   │   └── run_streamlit.py        # Streamlit 실행 헬퍼 스크립트
 │   ├── run_mappo.py               # 메인 MAPPO 학습 스크립트
 │   ├── config.py                  # 설정 파일 (PY)
@@ -44,55 +43,43 @@ BOAZ_MP2/
 │   ├── final_qa.jsonl            # 원본 QA 데이터 (용량이 커 제외)
 │   ├── gpt4o_qa_top10.jsonl      # 원본 QA 데이터를 GPT-4o-mini를 이용하여 질문을 다시 생성한 데이터 (용량이 커 제외)
 │   └── MetaDB_with_date_id.jsonl # 논문 데이터베이스
-├── requirements.txt               # Python 패키지
+├── requirements.txt              # Python 패키지
 ├── .env                          # 환경 변수 (HF_TOKEN 설정)
 ├── .gitignore                    # Git 제외 파일 목록
 └── README.md                     # 현재 파일
 ```
 
-## 🚀 빠른 시작 (Streamlit 웹 앱)
+## 시작 (Streamlit 웹 앱)
 
-**권장 환경**: Google Colab Pro (A100 GPU) 또는 로컬 GPU 환경
+**권장 환경**: Google Colab Pro (A100 GPU)
 
-### 1. Colab에서 실행 (추천)
+### 1. Colab에서 실행
 
-```python
 # 1. 저장소 클론
+```bash
 !git clone <repo-url>
-%cd BOAZ_MP2
+cd BOAZ_MP2
+```
 
 # 2. 환경변수 설정
-import os
-os.environ["HF_TOKEN"] = "your_huggingface_token_here"
+```bash
+# .env 파일
+HF_TOKEN=your_huggingface_token_here
+```
 
 # 3. 의존성 설치 및 앱 실행
+```bash
+!pip install -r requirements.txt
+```
+
+# Streamlit 앱 실행
+```bash
 !python code/streamlit/run_streamlit.py
 ```
 
-### 2. 로컬에서 실행
+### 웹 인터페이스 사용법
 
-```bash
-# 저장소 클론
-git clone <repo-url>
-cd BOAZ_MP2
-
-# 가상환경 생성 및 활성화
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 패키지 설치
-pip install -r requirements.txt
-
-# 환경변수 설정 (.env 파일 생성)
-echo "HF_TOKEN=your_huggingface_token_here" > .env
-
-# Streamlit 앱 실행
-python code/streamlit/run_streamlit.py
-```
-
-### 3. 웹 인터페이스 사용법
-
-1. **질문 입력**: 강화학습/딥러닝 관련 질문을 입력
+1. **질문 입력**: AI 관련 질문을 입력
 2. **답변 생성**: "질문하기" 버튼 클릭
 3. **결과 확인**: 
    - **Rewritten Question**: QR 모델이 재작성한 질문
@@ -100,63 +87,13 @@ python code/streamlit/run_streamlit.py
    - **Final Answer**: 최종 답변
    - **Used Documents**: 답변 생성에 사용된 문서들
 
-### 4. 예시 질문들
-
-```
-- "What is PPO used for in reinforcement learning?"
-- "How does attention mechanism work in transformers?"
-- "What are the advantages of MAPPO over other RL algorithms?"
-- "Explain the difference between actor-critic and Q-learning"
-```
 
 ## 학습 및 개발
-
-### 환경 설정
-
-```bash
-# 저장소 클론
-git clone <repo-url>
-cd BOAZ_MP2
-
-# 가상환경 생성 및 활성화
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 패키지 설치
-pip install -r requirements.txt
-```
-
-### 환경 변수 설정
-
-BOAZ_MP2 경로에 `.env` 파일을 생성하고 Hugging Face 토큰을 설정:
-
-```bash
-HF_TOKEN=your_huggingface_token_here
-```
 
 ### MAPPO 학습 실행
 
 ```bash
 python code/run_mappo.py
-```
-
-## ⚙️ 설정
-
-### Streamlit 설정
-
-Streamlit 앱의 설정은 `code/streamlit/streamlit_config.yaml`에서 관리됩니다:
-
-```yaml
-# 모델 설정 (추론용)
-models:
-  policy_model_name: "peter520416/llama1b-MMOA_RAG_Final_cp180"  # 사전 훈련된 모델
-  generator_model_name: "meta-llama/Llama-3.1-8B-Instruct"
-  sbert_model_name: "all-MiniLM-L6-v2"
-
-# RAG 설정
-rag:
-  k_retrieve: 10      # BM25에서 검색할 문서 수
-  k_select: 3         # 최종 선택할 문서 수
 ```
 
 ### 학습 설정
@@ -169,6 +106,11 @@ models:
   policy_model_name: "meta-llama/Llama-3.2-1B-Instruct"
   generator_model_name: "meta-llama/Llama-3.1-8B-Instruct"
 
+# RAG 설정
+rag:
+  k_retrieve: 10      # BM25에서 검색할 문서 수
+  k_select: 3         # 최종 선택할 문서 수
+
 # 하이퍼파라미터
 hyperparameters:
   epochs: 3
@@ -176,7 +118,17 @@ hyperparameters:
   policy_learning_rate: 1.0e-5
 ```
 
-자세한 설정 방법은 `code/README.md`를 참조하세요.
+### Streamlit 설정
+
+Streamlit 앱의 설정은 `code/streamlit/streamlit_config.yaml`에서 관리됩니다:
+
+```yaml
+# 모델 설정 (추론용)
+models:
+  policy_model_name: "peter520416/llama1b-MMOA_RAG_Final_cp180"  # 사전 훈련된 모델
+  generator_model_name: "meta-llama/Llama-3.1-8B-Instruct"
+  sbert_model_name: "all-MiniLM-L6-v2"
+```
 
 ## 기술 스택
 
@@ -223,10 +175,10 @@ hyperparameters:
 - **인터넷 연결**: 모델 다운로드를 위한 안정적인 인터넷 필요
 - **Colab 제한**: 무료 Colab에서는 메모리 부족 가능성
 
-## 📚 참고 자료
+## 참고 자료
 
 - [MAPPO 논문](https://arxiv.org/abs/2501.15228)
-- [사전 훈련된 모델](https://huggingface.co/peter520416/llama1b-MMOA_RAG_Final_cp180)
+- [훈련된 모델](https://huggingface.co/peter520416/llama1b-MMOA_RAG_Final_cp180)
 
 ## 참여자
 
