@@ -114,6 +114,10 @@ hyperparameters:
   epochs: 3
   batch_size: 128
   policy_learning_rate: 1.0e-5
+
+# Hugging Face Repository ID
+repo_id: "peter520416/llama1b-MMOA_RAG"
+
 ```
 
 ### Streamlit 설정
@@ -136,7 +140,7 @@ models:
 - **Models**: 
   - Policy: `peter520416/llama1b-MMOA_RAG_Final_cp180` (사전 훈련됨)
   - Generator: `meta-llama/Llama-3.1-8B-Instruct`
-  - Retrieval: BM25 + Sentence-BERT
+  - Retrieval: BM25
 
 ### 학습 환경
 - **Framework**: PyTorch
