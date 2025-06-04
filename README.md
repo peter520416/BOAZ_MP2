@@ -101,9 +101,8 @@ hyperparameters:
 - **Critic Network**: 각 에이전트의 행동 평가
 - **Shared Parameters**: 효율적인 학습을 위한 파라미터 공유
 
-### RAG 파이프라인
+### RAG
 - **BM25 Retrieval**: 빠르고 효과적인 문서 검색
-- **Multi-step Reasoning**: 단계별 최적화
 
 ### 실험 및 모니터링
 - **체크포인트 자동 저장**: 학습 중단 시 복구 가능
