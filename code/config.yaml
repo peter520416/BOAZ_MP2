@@ -22,7 +22,7 @@ models:
 # ============================================================================
 paths:
   # 데이터 파일 경로
-  MeatDB_path: "./arxiv_db/MetaDB_with_date_id.jsonl"
+  MetaDB_path: "./data/MetaDB_with_date_id.jsonl"
   gpt4o_data_path: "./data/gpt4o_unique_df.csv"
   
   # 체크포인트 및 로그 저장 경로

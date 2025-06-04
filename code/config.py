@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv(".env")
 
 class Config:
-    def __init__(self, config_path="config.yaml"):
+    def __init__(self, config_path="code/config.yaml"):
         """YAML 설정 파일을 로드하여 클래스 속성으로 설정."""
         
         # YAML 파일 로드
@@ -46,8 +46,8 @@ class Config:
         # 파일 경로 설정
         # ============================================================================
         paths = self.config['paths']
-        self.CORPUS_INPUT_PATH = paths['corpus_input_path']
-        self.METADB_PATH = paths['corpus_input_path']  # 별칭
+        self.CORPUS_INPUT_PATH = paths['MetaDB_path']
+        self.METADB_PATH = paths['MetaDB_path']  # 별칭
         self.GPT4O_DATA_PATH = paths['gpt4o_data_path']
         self.LOCAL_REPO_DIR = paths['local_repo_dir']
         self.LOG_OUTPUT_PATH = paths['log_output_path']
