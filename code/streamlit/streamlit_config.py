@@ -6,14 +6,40 @@
 import os
 import yaml
 import torch
+from pathlib import Path
 from dotenv import load_dotenv
 
-# 환경 변수 로드
-load_dotenv(".env")
+def find_project_root():
+    """프로젝트 루트를 찾습니다."""
+    current = Path.cwd()
+    
+    # 현재 디렉토리가 BOAZ_MP2인지 확인
+    if current.name == "BOAZ_MP2":
+        return current
+    
+    # 상위 디렉토리들을 확인
+    for parent in current.parents:
+        if parent.name == "BOAZ_MP2":
+            return parent
+    
+    # 찾지 못한 경우 현재 디렉토리 반환
+    return current
+
+# 프로젝트 루트에서 환경 변수 로드
+project_root = find_project_root()
+env_file = project_root / ".env"
+if env_file.exists():
+    load_dotenv(env_file)
+else:
+    load_dotenv()  # 기본 위치에서 로드
 
 class StreamlitConfig:
     def __init__(self, config_path="streamlit_config.yaml"):
         """스트림릿 전용 YAML 설정 파일을 로드하여 클래스 속성으로 설정."""
+        
+        # 설정 파일 경로 처리 (절대경로가 아닌 경우 현재 디렉토리 기준)
+        if not os.path.isabs(config_path):
+            config_path = os.path.join(os.path.dirname(__file__), config_path)
         
         # YAML 파일 로드
         with open(config_path, 'r', encoding='utf-8') as file:

@@ -18,15 +18,15 @@ models:
   device: "auto"
 
 # ============================================================================
-# 파일 경로 설정
+# 파일 경로 설정 (프로젝트 루트 BOAZ_MP2 기준)
 # ============================================================================
 paths:
-  # 데이터 파일 경로 (streamlit 폴더 기준)
-  MetaDB_path: "../data/MetaDB_with_date_id.jsonl"
-  gpt4o_data_path: "../data/gpt4o_unique_df.csv"
+  # 데이터 파일 경로 (프로젝트 루트 기준)
+  MetaDB_path: "./data/MetaDB_with_date_id.jsonl"
+  gpt4o_data_path: "./data/gpt4o_unique_df.csv"
   
   # 로그 저장 경로 (추론용)
-  log_output_path: "../streamlit_inference_logs.csv"
+  log_output_path: "./streamlit_inference_logs.csv"
 
 # ============================================================================
 # RAG 모델 설정

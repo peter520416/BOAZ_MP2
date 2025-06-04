@@ -2,6 +2,8 @@
 스트림릿 앱 실행 스크립트
 MAPPO RAG 챗봇을 실행하기 위한 헬퍼 스크립트
 사전 훈련된 모델을 사용한 추론 전용
+
+프로젝트 루트(BOAZ_MP2)에서 실행: python ./code/streamlit/run_streamlit.py
 """
 
 import os
@@ -9,58 +11,84 @@ import sys
 import subprocess
 from pathlib import Path
 
+def get_project_root():
+    """프로젝트 루트 디렉토리를 찾습니다."""
+    # 현재 스크립트의 위치에서 프로젝트 루트 추정
+    script_dir = Path(__file__).parent.absolute()
+    project_root = script_dir.parent.parent  # code/streamlit -> code -> BOAZ_MP2
+    return project_root
+
 def check_requirements():
     """필요한 환경이 설정되어 있는지 확인합니다."""
     
     print("🔍 환경 검사 중...")
     
+    project_root = get_project_root()
+    streamlit_dir = project_root / "code" / "streamlit"
+    
     # 1. 필요한 파일들 존재 확인
     required_files = [
         "streamlit_config.yaml",
-        "streamlit_config.py",
+        "streamlit_config.py", 
         "rag_pipeline.py",
         "streamlit_app.py"
     ]
     
     missing_files = []
     for file in required_files:
-        if not os.path.exists(file):
+        if not (streamlit_dir / file).exists():
             missing_files.append(file)
     
     if missing_files:
         print(f"❌ 필요한 파일들이 없습니다: {missing_files}")
+        print(f"   위치: {streamlit_dir}")
         return False
     
-    # 2. 환경변수 확인
+    # 2. 환경변수 확인 (.env 파일이 프로젝트 루트에 있는지)
+    env_file = project_root / ".env"
+    if not env_file.exists():
+        print("⚠️  .env 파일이 프로젝트 루트에 없습니다.")
+        print(f"   {env_file} 에 HF_TOKEN=your_token_here 형태로 추가하세요.")
+        print("   Hugging Face에서 토큰을 발급받아 사용하세요: https://huggingface.co/settings/tokens")
+        return False
+    
+    # 환경변수 로드 (프로젝트 루트 기준)
+    from dotenv import load_dotenv
+    load_dotenv(env_file)
+    
     if not os.getenv("HF_TOKEN"):
         print("⚠️  HF_TOKEN 환경변수가 설정되지 않았습니다.")
-        print("   .env 파일에 HF_TOKEN=your_token_here 형태로 추가하세요.")
-        print("   Hugging Face에서 토큰을 발급받아 사용하세요: https://huggingface.co/settings/tokens")
+        print(f"   {env_file} 파일에 HF_TOKEN=your_token_here 형태로 추가하세요.")
         return False
     
     # 3. 데이터 파일 확인
     try:
-        from streamlit_config import Config
+        # streamlit 디렉토리를 sys.path에 추가
+        sys.path.insert(0, str(streamlit_dir))
+        from streamlit_config import StreamlitConfig
+        
+        # 프로젝트 루트 기준으로 config 로드
+        config = StreamlitConfig(str(streamlit_dir / "streamlit_config.yaml"))
+        
         data_files = [
-            Config.METADB_PATH,
-            Config.GPT4O_DATA_PATH
+            project_root / config.METADB_PATH.replace("./", ""),
+            project_root / config.GPT4O_DATA_PATH.replace("./", "")
         ]
         
         missing_data_files = []
         for file_path in data_files:
-            if not os.path.exists(file_path):
-                missing_data_files.append(file_path)
+            if not file_path.exists():
+                missing_data_files.append(str(file_path))
         
         if missing_data_files:
             print("⚠️  다음 데이터 파일들이 없습니다:")
             for file_path in missing_data_files:
                 print(f"   - {file_path}")
-            print("   streamlit_config.yaml에서 올바른 경로를 설정하거나")
             print("   해당 위치에 데이터 파일을 배치하세요.")
             return False
             
-    except ImportError:
-        print("⚠️  streamlit_config 모듈을 불러올 수 없습니다.")
+    except ImportError as e:
+        print(f"⚠️  streamlit_config 모듈을 불러올 수 없습니다: {e}")
         print("   streamlit_config.py 파일이 올바른지 확인하세요.")
         return False
     except Exception as e:
@@ -76,20 +104,29 @@ def check_models():
     
     try:
         from transformers import AutoTokenizer
-        from streamlit_config import Config
+        
+        project_root = get_project_root()
+        streamlit_dir = project_root / "code" / "streamlit"
+        
+        # streamlit 디렉토리를 sys.path에 추가
+        sys.path.insert(0, str(streamlit_dir))
+        from streamlit_config import StreamlitConfig
+        
+        # 프로젝트 루트 기준으로 config 로드
+        config = StreamlitConfig(str(streamlit_dir / "streamlit_config.yaml"))
         
         # Policy 모델 접근 확인
-        print(f"🔄 Policy 모델 확인: {Config.POLICY_MODEL_NAME}")
+        print(f"🔄 Policy 모델 확인: {config.POLICY_MODEL_NAME}")
         tokenizer = AutoTokenizer.from_pretrained(
-            Config.POLICY_MODEL_NAME,
+            config.POLICY_MODEL_NAME,
             use_fast=False
         )
         print("✅ Policy 모델 접근 가능")
         
         # Generator 모델 접근 확인
-        print(f"🔄 Generator 모델 확인: {Config.GENERATOR_MODEL_NAME}")
+        print(f"🔄 Generator 모델 확인: {config.GENERATOR_MODEL_NAME}")
         generator_tokenizer = AutoTokenizer.from_pretrained(
-            Config.GENERATOR_MODEL_NAME,
+            config.GENERATOR_MODEL_NAME,
             use_fast=False
         )
         print("✅ Generator 모델 접근 가능")
@@ -129,21 +166,28 @@ def run_streamlit():
     print("   사전 훈련된 모델 사용 (추론 전용)")
     print("="*50)
     
-    # 스트림릿 명령어 구성
+    project_root = get_project_root()
+    streamlit_dir = project_root / "code" / "streamlit"
+    streamlit_app_path = streamlit_dir / "streamlit_app.py"
+    
+    # 스트림릿 명령어 구성 (streamlit 디렉토리에서 실행)
     cmd = [
-        sys.executable, "-m", "streamlit", "run", "streamlit_app.py",
+        sys.executable, "-m", "streamlit", "run", str(streamlit_app_path),
         "--server.address", "0.0.0.0",
         "--server.port", "8501",
         "--server.headless", "false"
     ]
     
     try:
+        print(f"📁 프로젝트 루트: {project_root}")
+        print(f"📁 스트림릿 앱: {streamlit_app_path}")
         print("🌐 브라우저에서 http://localhost:8501 을 열어주세요.")
         print("🛑 종료하려면 Ctrl+C를 눌러주세요.")
         print("\n📝 첫 실행 시 모델 로딩에 시간이 걸릴 수 있습니다...")
         print("💾 모델이 로드되면 캐시되어 이후 실행이 빨라집니다.\n")
         
-        subprocess.run(cmd, cwd=os.getcwd())
+        # 작업 디렉토리를 streamlit 폴더로 설정하여 실행
+        subprocess.run(cmd, cwd=str(streamlit_dir))
         
     except KeyboardInterrupt:
         print("\n👋 챗봇이 종료되었습니다.")
@@ -153,9 +197,22 @@ def run_streamlit():
 def main():
     """메인 실행 함수"""
     
+    project_root = get_project_root()
+    
     print("🤖 MAPPO RAG 챗봇 시작 준비")
     print("📋 사전 훈련된 모델 사용 (peter520416/llama1b-MMOA_RAG_Final_cp180)")
+    print(f"📁 프로젝트 루트: {project_root}")
     print("-" * 60)
+    
+    # 프로젝트 루트에서 실행되고 있는지 확인
+    current_dir = Path.cwd()
+    if current_dir.name != "BOAZ_MP2":
+        print("⚠️  이 스크립트는 BOAZ_MP2 프로젝트 루트에서 실행해야 합니다.")
+        print(f"   현재 위치: {current_dir}")
+        print("   올바른 실행 방법:")
+        print("   cd BOAZ_MP2")
+        print("   python ./code/streamlit/run_streamlit.py")
+        return
     
     # 1. 환경 검사
     if not check_requirements():

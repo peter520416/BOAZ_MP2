@@ -10,6 +10,7 @@ import json
 import numpy as np
 import torch
 import torch.nn as nn
+from pathlib import Path
 from transformers import (
     AutoTokenizer, 
     AutoModelForCausalLM,
@@ -26,8 +27,30 @@ from streamlit_config import Config  # 스트림릿 전용 config 사용
 # 로깅 설정
 logging.set_verbosity_error()
 
-# 환경변수 로드
-load_dotenv(".env")
+# 환경변수 로드 (프로젝트 루트에서)
+def find_project_root():
+    """프로젝트 루트를 찾습니다."""
+    current = Path.cwd()
+    
+    # 현재 디렉토리가 BOAZ_MP2인지 확인
+    if current.name == "BOAZ_MP2":
+        return current
+    
+    # 상위 디렉토리들을 확인
+    for parent in current.parents:
+        if parent.name == "BOAZ_MP2":
+            return parent
+    
+    # 찾지 못한 경우 현재 디렉토리 반환
+    return current
+
+project_root = find_project_root()
+env_file = project_root / ".env"
+if env_file.exists():
+    load_dotenv(env_file)
+else:
+    load_dotenv()
+
 HF_TOKEN = os.getenv("HF_TOKEN")
 if HF_TOKEN:
     login(token=HF_TOKEN)
@@ -99,9 +122,15 @@ class RAGPipeline:
         """코퍼스 데이터를 로드합니다."""
         print("📚 코퍼스 로드 중...")
         
+        # 절대 경로로 변환
+        if Config.METADB_PATH.startswith("./"):
+            corpus_path = project_root / Config.METADB_PATH[2:]
+        else:
+            corpus_path = Path(Config.METADB_PATH)
+        
         self.corpus = []
         try:
-            with open(Config.METADB_PATH, "r", encoding="utf-8") as f:
+            with open(corpus_path, "r", encoding="utf-8") as f:
                 for line in f:
                     data = json.loads(line)
                     paper_id = data.get("arxiv_id", data.get("id"))
@@ -115,7 +144,7 @@ class RAGPipeline:
                             "abstract": abstract
                         })
         except FileNotFoundError:
-            print(f"❌ 코퍼스 파일을 찾을 수 없습니다: {Config.METADB_PATH}")
+            print(f"❌ 코퍼스 파일을 찾을 수 없습니다: {corpus_path}")
             raise
         
         # 전체 문서 생성 (paper_id별로 모든 청크 합치기)
